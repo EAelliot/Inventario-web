@@ -82,13 +82,13 @@
             <div style="grid-column:span 2;"><span>Proveedor</span><b id="pd-proveedor">—</b></div>
           </div>
           <div class="stock-barra">
-            <div><span>A</span><b id="pd-stock-A">0</b></div>
-            <div><span>B</span><b id="pd-stock-B">0</b></div>
-            <div><span>C</span><b id="pd-stock-C">0</b></div>
-            <div><span>D</span><b id="pd-stock-D">0</b></div>
-            <div><span>E</span><b id="pd-stock-E">0</b></div>
+            <div><span>A</span><b id="pd-stock-A">0</b><i id="pd-rollos-A" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>B</span><b id="pd-stock-B">0</b><i id="pd-rollos-B" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>C</span><b id="pd-stock-C">0</b><i id="pd-rollos-C" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>D</span><b id="pd-stock-D">0</b><i id="pd-rollos-D" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>E</span><b id="pd-stock-E">0</b><i id="pd-rollos-E" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
           </div>
-          <div style="text-align:center;color:var(--text-muted);font-size:12.5px;">Stock total: <b id="pd-stock-total" class="cantidad">0</b></div>
+          <div style="text-align:center;color:var(--text-muted);font-size:12.5px;">Stock total: <b id="pd-stock-total" class="cantidad">0</b> · <b id="pd-rollos-total" class="cantidad">0</b> rollos</div>
         </div>
         <div class="grid-botones-home">
           <button class="btn btn-primario" data-mov="entrada">⬇ Entrada</button>
@@ -108,6 +108,9 @@
           <select id="en-ubicacion"></select>
           <label for="en-cantidad">Cantidad</label>
           <input id="en-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="en-rollos">Rollos</label>
+          <input id="en-rollos" type="number" inputmode="numeric" min="1" step="1" placeholder="0">
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">Obligatorio: cuántos rollos ingresan.</div>
           <label for="en-observacion">Observación</label>
           <textarea id="en-observacion" placeholder="Recepción proveedor..."></textarea>
           <div id="en-msg"></div>
@@ -124,16 +127,19 @@
         <div class="card">
           <div class="producto-nombre" id="sa-nombre" style="font-size:15px;">—</div>
           <div class="stock-barra">
-            <div><span>A</span><b id="sa-stock-A">0</b></div>
-            <div><span>B</span><b id="sa-stock-B">0</b></div>
-            <div><span>C</span><b id="sa-stock-C">0</b></div>
-            <div><span>D</span><b id="sa-stock-D">0</b></div>
-            <div><span>E</span><b id="sa-stock-E">0</b></div>
+            <div><span>A</span><b id="sa-stock-A">0</b><i id="sa-rollos-A" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>B</span><b id="sa-stock-B">0</b><i id="sa-rollos-B" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>C</span><b id="sa-stock-C">0</b><i id="sa-rollos-C" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>D</span><b id="sa-stock-D">0</b><i id="sa-rollos-D" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>E</span><b id="sa-stock-E">0</b><i id="sa-rollos-E" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
           </div>
           <label for="sa-ubicacion">Ubicación origen</label>
           <select id="sa-ubicacion"></select>
           <label for="sa-cantidad">Cantidad</label>
           <input id="sa-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="sa-rollos">Rollos</label>
+          <input id="sa-rollos" type="number" inputmode="numeric" min="0" step="1" placeholder="0">
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">Obligatorio: cuántos rollos salen (0 si solo se corta metraje de un rollo).</div>
           <label for="sa-observacion">Observación</label>
           <textarea id="sa-observacion" placeholder="Entrega a cliente..."></textarea>
           <div id="sa-msg"></div>
@@ -151,11 +157,14 @@
           <div class="producto-nombre" id="tr-nombre" style="font-size:15px;">—</div>
           <label for="tr-origen">Origen</label>
           <select id="tr-origen"></select>
-          <div style="text-align:right;font-size:12px;color:var(--text-muted);">Disponible: <b id="tr-disponible" class="cantidad">0</b></div>
+          <div style="text-align:right;font-size:12px;color:var(--text-muted);">Disponible: <b id="tr-disponible" class="cantidad">0</b> · <b id="tr-disponible-rollos" class="cantidad">0</b> rollos</div>
           <label for="tr-destino">Destino</label>
           <select id="tr-destino"></select>
           <label for="tr-cantidad">Cantidad</label>
           <input id="tr-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="tr-rollos">Rollos</label>
+          <input id="tr-rollos" type="number" inputmode="numeric" min="0" step="1" placeholder="0">
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">Obligatorio: cuántos rollos se mueven (0 si solo es metraje).</div>
           <label for="tr-observacion">Observación</label>
           <textarea id="tr-observacion" placeholder="Opcional..."></textarea>
           <div id="tr-msg"></div>
@@ -173,7 +182,7 @@
           <div class="producto-nombre" id="aj-nombre" style="font-size:15px;">—</div>
           <label for="aj-ubicacion">Ubicación</label>
           <select id="aj-ubicacion"></select>
-          <div style="text-align:right;font-size:12px;color:var(--text-muted);">Stock actual: <b id="aj-actual" class="cantidad">0</b></div>
+          <div style="text-align:right;font-size:12px;color:var(--text-muted);">Stock actual: <b id="aj-actual" class="cantidad">0</b> · <b id="aj-actual-rollos" class="cantidad">0</b> rollos</div>
           <label for="aj-sentido">Tipo de ajuste</label>
           <select id="aj-sentido">
             <option value="Incremento">Incremento (+)</option>
@@ -181,6 +190,9 @@
           </select>
           <label for="aj-cantidad">Cantidad</label>
           <input id="aj-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="aj-rollos">Rollos</label>
+          <input id="aj-rollos" type="number" inputmode="numeric" min="0" step="1" placeholder="0">
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">Obligatorio (0 si el ajuste es solo de Kg). Si ajustas solo rollos, pon Cantidad = 0.</div>
           <label for="aj-motivo">Motivo</label>
           <select id="aj-motivo">
             <option value="Diferencia de inventario">Diferencia de inventario</option>
@@ -206,11 +218,11 @@
           <div class="msg-ok"><b>Listo</b><span id="res-detalle"></span></div>
           <div style="font-size:12px;color:var(--text-muted);">Folio: <span class="id-mov" id="res-folio">—</span></div>
           <div class="stock-barra" style="margin-top:14px;">
-            <div><span>A</span><b id="res-stock-A">0</b></div>
-            <div><span>B</span><b id="res-stock-B">0</b></div>
-            <div><span>C</span><b id="res-stock-C">0</b></div>
-            <div><span>D</span><b id="res-stock-D">0</b></div>
-            <div><span>E</span><b id="res-stock-E">0</b></div>
+            <div><span>A</span><b id="res-stock-A">0</b><i id="res-rollos-A" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>B</span><b id="res-stock-B">0</b><i id="res-rollos-B" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>C</span><b id="res-stock-C">0</b><i id="res-rollos-C" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>D</span><b id="res-stock-D">0</b><i id="res-rollos-D" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
+            <div><span>E</span><b id="res-stock-E">0</b><i id="res-rollos-E" style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">0 r</i></div>
           </div>
         </div>
         <div class="fila-botones">

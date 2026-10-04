@@ -263,6 +263,15 @@
     }, function (msg) { mostrarMensaje('scan-msg', msg, 'error'); });
   }
 
+  /** Pinta Kg (y rollos) por almacén en una barra de stock con prefijo de IDs (pd, sa, res). */
+  function pintarStock_(prefix, stock) {
+    var r = stock.rollos || {};
+    ['A', 'B', 'C', 'D', 'E'].forEach(function (k) {
+      var kg = document.getElementById(prefix + '-stock-' + k); if (kg) kg.textContent = stock[k];
+      var ro = document.getElementById(prefix + '-rollos-' + k); if (ro) ro.textContent = (r[k] || 0) + ' r';
+    });
+  }
+
   function renderProducto(p) {
     document.getElementById('pd-idqr').textContent = p.idQr;
     document.getElementById('pd-descripcion').textContent = p.descripcion;
@@ -274,8 +283,9 @@
     var pill = document.getElementById('pd-estado');
     pill.textContent = p.estado;
     pill.className = 'estado-pill ' + (p.estado === 'Activo' ? 'activo' : 'inactivo');
-    ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { document.getElementById('pd-stock-' + k).textContent = p.stock[k]; });
+    pintarStock_('pd', p.stock);
     document.getElementById('pd-stock-total').textContent = p.stock.total;
+    document.getElementById('pd-rollos-total').textContent = (p.stock.rollos && p.stock.rollos.total) || 0;
   }
 
   // ============================================================================
@@ -298,15 +308,17 @@
     document.getElementById('en-nombre').textContent = nombreCorto_();
     llenarSelectUbicaciones(document.getElementById('en-ubicacion'), ubicacionesCache);
     document.getElementById('en-cantidad').value = '';
+    document.getElementById('en-rollos').value = '';
     document.getElementById('en-observacion').value = '';
     limpiarMensaje('en-msg');
   }
 
   function prepararSalida() {
     document.getElementById('sa-nombre').textContent = nombreCorto_();
-    ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { document.getElementById('sa-stock-' + k).textContent = productoActual.stock[k]; });
+    pintarStock_('sa', productoActual.stock);
     llenarSelectUbicaciones(document.getElementById('sa-ubicacion'), ubicacionesCache);
     document.getElementById('sa-cantidad').value = '';
+    document.getElementById('sa-rollos').value = '';
     document.getElementById('sa-observacion').value = '';
     limpiarMensaje('sa-msg');
   }
@@ -316,6 +328,7 @@
     llenarSelectUbicaciones(document.getElementById('tr-origen'), ubicacionesCache);
     llenarSelectUbicaciones(document.getElementById('tr-destino'), ubicacionesCache);
     document.getElementById('tr-cantidad').value = '';
+    document.getElementById('tr-rollos').value = '';
     document.getElementById('tr-observacion').value = '';
     limpiarMensaje('tr-msg');
     actualizarDisponibleTransferencia();
@@ -325,6 +338,7 @@
     document.getElementById('aj-nombre').textContent = nombreCorto_();
     llenarSelectUbicaciones(document.getElementById('aj-ubicacion'), ubicacionesCache);
     document.getElementById('aj-cantidad').value = '';
+    document.getElementById('aj-rollos').value = '';
     document.getElementById('aj-observacion').value = '';
     document.getElementById('aj-sentido').value = 'Incremento';
     document.getElementById('aj-motivo').value = 'Diferencia de inventario';
@@ -336,18 +350,20 @@
     if (!productoActual) return;
     var cod = document.getElementById('tr-origen').value;
     document.getElementById('tr-disponible').textContent = productoActual.stock[cod] || 0;
+    document.getElementById('tr-disponible-rollos').textContent = (productoActual.stock.rollos && productoActual.stock.rollos[cod]) || 0;
   }
 
   function actualizarStockActualAjuste() {
     if (!productoActual) return;
     var cod = document.getElementById('aj-ubicacion').value;
     document.getElementById('aj-actual').textContent = productoActual.stock[cod] || 0;
+    document.getElementById('aj-actual-rollos').textContent = (productoActual.stock.rollos && productoActual.stock.rollos[cod]) || 0;
   }
 
   function mostrarResultado(tipoTexto, resultado, sufijo) {
     document.getElementById('res-detalle').textContent = ' ' + tipoTexto + ' registrada correctamente' + (sufijo || '') + '.';
     document.getElementById('res-folio').textContent = resultado.idMovimiento;
-    ['A', 'B', 'C', 'D', 'E'].forEach(function (k) { document.getElementById('res-stock-' + k).textContent = resultado.stock[k]; });
+    pintarStock_('res', resultado.stock);
     if (productoActual) productoActual.stock = resultado.stock;
     mostrarVista('resultado');
   }
@@ -368,8 +384,8 @@
       return '<div class="card">' +
         '<div class="producto-nombre" style="font-size:15px;">' + escapeHtml(f.descripcion) + '</div>' +
         '<div class="producto-id">' + escapeHtml(f.codigo) + ' · Lote ' + escapeHtml(f.lote || '—') + ' · ' + escapeHtml(f.idQr) + '</div>' +
-        '<div class="stock-barra">' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div><span>' + k + '</span><b>' + f[k] + '</b></div>'; }).join('') + '</div>' +
-        '<div style="text-align:center;color:var(--text-muted);font-size:12.5px;">Total: <b class="cantidad">' + f.total + '</b></div>' +
+        '<div class="stock-barra">' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div><span>' + k + '</span><b>' + f[k] + '</b><i style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">' + ((f.rollos && f.rollos[k]) || 0) + ' r</i></div>'; }).join('') + '</div>' +
+        '<div style="text-align:center;color:var(--text-muted);font-size:12.5px;">Total: <b class="cantidad">' + f.total + '</b> · <b class="cantidad">' + ((f.rollos && f.rollos.total) || 0) + '</b> rollos</div>' +
         '</div>';
     }).join('');
   }
@@ -397,10 +413,10 @@
     var filas = res.items.map(function (it) {
       return '<div class="lista-item"><div><div class="principal">' + escapeHtml(it.descripcion) + '</div>' +
         '<div class="secundario">' + escapeHtml(it.codigo) + ' · Lote ' + escapeHtml(it.lote || '—') + '</div></div>' +
-        '<div class="cantidad">' + it.cantidad + '</div></div>';
+        '<div class="cantidad" style="text-align:right;">' + it.cantidad + '<br><span style="font-size:11px;color:var(--text-muted);">' + (it.rollos || 0) + ' rollos</span></div></div>';
     }).join('');
     cont.innerHTML = '<div class="card">' + filas +
-      '<div class="lista-item total-fila"><div class="principal">Total</div><div class="cantidad">' + res.total + '</div></div></div>';
+      '<div class="lista-item total-fila"><div class="principal">Total</div><div class="cantidad" style="text-align:right;">' + res.total + '<br><span style="font-size:11px;color:var(--text-muted);">' + (res.totalRollos || 0) + ' rollos</span></div></div></div>';
   }
 
   function cargarHistorial(filtros) {
@@ -419,7 +435,7 @@
         '<td>' + m.tipo + '</td>' +
         '<td>' + escapeHtml(m.descripcion) + '<br><span style="color:var(--text-muted);font-size:11px;">' + escapeHtml(m.lote || '') + '</span></td>' +
         '<td>' + ubic + '</td>' +
-        '<td class="cantidad">' + signo + m.cantidad + ' ' + m.unidad + '</td>' +
+        '<td class="cantidad">' + signo + m.cantidad + ' ' + m.unidad + '<br><span style="font-size:11px;color:var(--text-muted);">' + signo + (m.rollos || 0) + ' rollos</span></td>' +
         '<td>' + escapeHtml(m.usuario) + '</td></tr>';
     }).join('');
     cont.innerHTML = '<div class="card tabla-wrap"><table class="tabla"><thead><tr>' +
@@ -438,8 +454,8 @@
     var bloques = unidades.map(function (u) {
       var d = res.porUnidad[u];
       return '<div class="card">' +
-        '<div class="resumen-total"><div class="num">' + formatearNumero_(d.total) + '</div><div class="unidad">' + escapeHtml(u) + ' en total</div></div>' +
-        '<div class="stock-barra">' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div><span>' + k + '</span><b>' + d[k] + '</b></div>'; }).join('') + '</div>' +
+        '<div class="resumen-total"><div class="num">' + formatearNumero_(d.total) + '</div><div class="unidad">' + escapeHtml(u) + ' en total · ' + ((d.rollos && d.rollos.total) || 0) + ' rollos</div></div>' +
+        '<div class="stock-barra">' + ['A', 'B', 'C', 'D', 'E'].map(function (k) { return '<div><span>' + k + '</span><b>' + d[k] + '</b><i style="display:block;font-style:normal;font-size:10.5px;color:var(--text-muted);margin-top:1px;">' + ((d.rollos && d.rollos[k]) || 0) + ' r</i></div>'; }).join('') + '</div>' +
         '</div>';
     }).join('');
     document.getElementById('re-contenido').innerHTML =
@@ -668,7 +684,7 @@
     var btn = this; limpiarMensaje('en-msg');
     var payload = {
       idQr: productoActual.idQr, ubicacion: document.getElementById('en-ubicacion').value,
-      cantidad: document.getElementById('en-cantidad').value, observacion: document.getElementById('en-observacion').value
+      cantidad: document.getElementById('en-cantidad').value, rollos: document.getElementById('en-rollos').value, observacion: document.getElementById('en-observacion').value
     };
     btn.disabled = true;
     callServer('registrarEntrada', [estado.token, payload], function (res) {
@@ -680,7 +696,7 @@
     var btn = this; limpiarMensaje('sa-msg');
     var payload = {
       idQr: productoActual.idQr, ubicacion: document.getElementById('sa-ubicacion').value,
-      cantidad: document.getElementById('sa-cantidad').value, observacion: document.getElementById('sa-observacion').value
+      cantidad: document.getElementById('sa-cantidad').value, rollos: document.getElementById('sa-rollos').value, observacion: document.getElementById('sa-observacion').value
     };
     btn.disabled = true;
     callServer('registrarSalida', [estado.token, payload], function (res) {
@@ -692,7 +708,7 @@
     var btn = this; limpiarMensaje('tr-msg');
     var payload = {
       idQr: productoActual.idQr, origen: document.getElementById('tr-origen').value,
-      destino: document.getElementById('tr-destino').value, cantidad: document.getElementById('tr-cantidad').value,
+      destino: document.getElementById('tr-destino').value, cantidad: document.getElementById('tr-cantidad').value, rollos: document.getElementById('tr-rollos').value,
       observacion: document.getElementById('tr-observacion').value
     };
     btn.disabled = true;
@@ -706,7 +722,7 @@
     var payload = {
       idQr: productoActual.idQr, ubicacion: document.getElementById('aj-ubicacion').value,
       sentido: document.getElementById('aj-sentido').value, motivo: document.getElementById('aj-motivo').value,
-      cantidad: document.getElementById('aj-cantidad').value, observacion: document.getElementById('aj-observacion').value
+      cantidad: document.getElementById('aj-cantidad').value, rollos: document.getElementById('aj-rollos').value, observacion: document.getElementById('aj-observacion').value
     };
     btn.disabled = true;
     callServer('registrarAjuste', [estado.token, payload], function (res) {
