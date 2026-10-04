@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ======================= LOGIN ======================= -->
+  <div id="view-login" class="view">
+    <div class="login-wrap">
+      <div class="login-card">
+        <h1>Control de Inventarios</h1>
+        <p class="sub">Ingresa con tu usuario y PIN.</p>
+        <label for="li-usuario">Usuario</label>
+        <input id="li-usuario" type="text" autocomplete="username" placeholder="usuario">
+        <label for="li-pin">PIN</label>
+        <input id="li-pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••">
+        <div id="login-msg"></div>
+        <button class="btn btn-primario" id="btn-login" style="margin-top:16px;">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= APP (con sesión) ======================= -->
+  <div id="view-app" class="oculto">
+    <div class="topbar">
+      <div class="marca">Control de Inventarios<small id="tb-empresa">Almacén</small></div>
+      <div class="usuario-chip">
+        <span class="badge-rol" id="tb-rol">—</span>
+        <button class="btn-icono" id="btn-logout" title="Cerrar sesión">Salir</button>
+      </div>
+    </div>
+
+    <main>
+
+      <!-- ---------- HOME ---------- -->
+      <div id="view-home" class="view">
+        <h2 class="titulo-vista">Hola, <span id="home-nombre">—</span></h2>
+        <div class="grid-botones-home">
+          <button class="btn btn-primario ancho" data-ir="scan">📷 Escanear / Registrar movimiento</button>
+          <button class="btn" data-ir="stock">📦 Consultar stock</button>
+          <button class="btn" data-ir="ubicacion">🏬 Por ubicación</button>
+          <button class="btn" data-ir="historial">🕘 Historial</button>
+          <button class="btn" data-ir="resumen">📊 Resumen</button>
+          <button class="btn ancho oculto" data-rol-admin data-ir="admin">⚙️ Configuración (Admin)</button>
+        </div>
+      </div>
+
+      <!-- ---------- ESCANEAR ---------- -->
+      <div id="view-scan" class="view oculto">
+        <h2 class="titulo-vista">Escanear QR</h2>
+        <div class="card">
+          <div class="scan-caja">
+            <video id="scanner-video" playsinline muted></video>
+          </div>
+          <p class="scan-hint" id="scan-hint">Apunta la cámara al código QR del producto/lote.</p>
+          <div id="scan-msg"></div>
+          <div class="divisor-o">o escribe el código manualmente</div>
+          <label for="scan-manual">ID QR</label>
+          <input id="scan-manual" type="text" placeholder="QR000001" style="text-transform:uppercase;">
+          <button class="btn btn-primario" id="btn-scan-manual" style="margin-top:10px;">Buscar</button>
+        </div>
+      </div>
+
+      <!-- ---------- PRODUCTO IDENTIFICADO ---------- -->
+      <div id="view-product" class="view oculto">
+        <h2 class="titulo-vista">Producto identificado</h2>
+        <div class="card">
+          <div class="producto-id" id="pd-idqr">QR000000</div>
+          <div class="producto-nombre" id="pd-descripcion">—</div>
+          <span class="estado-pill" id="pd-estado">—</span>
+          <div class="ficha-campos">
+            <div><span>Código</span><b id="pd-codigo">—</b></div>
+            <div><span>Color</span><b id="pd-color">—</b></div>
+            <div><span>Lote</span><b id="pd-lote">—</b></div>
+            <div><span>Unidad</span><b id="pd-unidad">—</b></div>
+            <div style="grid-column:span 2;"><span>Proveedor</span><b id="pd-proveedor">—</b></div>
+          </div>
+          <div class="stock-barra">
+            <div><span>A</span><b id="pd-stock-A">0</b></div>
+            <div><span>B</span><b id="pd-stock-B">0</b></div>
+            <div><span>C</span><b id="pd-stock-C">0</b></div>
+            <div><span>D</span><b id="pd-stock-D">0</b></div>
+            <div><span>E</span><b id="pd-stock-E">0</b></div>
+          </div>
+          <div style="text-align:center;color:var(--text-muted);font-size:12.5px;">Stock total: <b id="pd-stock-total" class="cantidad">0</b></div>
+        </div>
+        <div class="grid-botones-home">
+          <button class="btn btn-primario" data-mov="entrada">⬇ Entrada</button>
+          <button class="btn btn-primario" data-mov="salida">⬆ Salida</button>
+          <button class="btn" data-mov="transferencia">↔ Transferencia</button>
+          <button class="btn oculto" data-rol-ajuste data-mov="ajuste">⚖ Ajuste</button>
+        </div>
+        <button class="btn btn-secundario" id="btn-otro-escaneo" style="margin-top:10px;">Escanear otro producto</button>
+      </div>
+
+      <!-- ---------- ENTRADA ---------- -->
+      <div id="view-entrada" class="view oculto">
+        <h2 class="titulo-vista">Entrada</h2>
+        <div class="card">
+          <div class="producto-nombre" id="en-nombre" style="font-size:15px;">—</div>
+          <label for="en-ubicacion">Ubicación destino</label>
+          <select id="en-ubicacion"></select>
+          <label for="en-cantidad">Cantidad</label>
+          <input id="en-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="en-observacion">Observación</label>
+          <textarea id="en-observacion" placeholder="Recepción proveedor..."></textarea>
+          <div id="en-msg"></div>
+          <div class="fila-botones">
+            <button class="btn btn-secundario" data-volver="product">Cancelar</button>
+            <button class="btn btn-primario" id="btn-confirmar-entrada">Confirmar entrada</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- SALIDA ---------- -->
+      <div id="view-salida" class="view oculto">
+        <h2 class="titulo-vista">Salida</h2>
+        <div class="card">
+          <div class="producto-nombre" id="sa-nombre" style="font-size:15px;">—</div>
+          <div class="stock-barra">
+            <div><span>A</span><b id="sa-stock-A">0</b></div>
+            <div><span>B</span><b id="sa-stock-B">0</b></div>
+            <div><span>C</span><b id="sa-stock-C">0</b></div>
+            <div><span>D</span><b id="sa-stock-D">0</b></div>
+            <div><span>E</span><b id="sa-stock-E">0</b></div>
+          </div>
+          <label for="sa-ubicacion">Ubicación origen</label>
+          <select id="sa-ubicacion"></select>
+          <label for="sa-cantidad">Cantidad</label>
+          <input id="sa-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="sa-observacion">Observación</label>
+          <textarea id="sa-observacion" placeholder="Entrega a cliente..."></textarea>
+          <div id="sa-msg"></div>
+          <div class="fila-botones">
+            <button class="btn btn-secundario" data-volver="product">Cancelar</button>
+            <button class="btn btn-primario" id="btn-confirmar-salida">Confirmar salida</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- TRANSFERENCIA ---------- -->
+      <div id="view-transferencia" class="view oculto">
+        <h2 class="titulo-vista">Transferencia</h2>
+        <div class="card">
+          <div class="producto-nombre" id="tr-nombre" style="font-size:15px;">—</div>
+          <label for="tr-origen">Origen</label>
+          <select id="tr-origen"></select>
+          <div style="text-align:right;font-size:12px;color:var(--text-muted);">Disponible: <b id="tr-disponible" class="cantidad">0</b></div>
+          <label for="tr-destino">Destino</label>
+          <select id="tr-destino"></select>
+          <label for="tr-cantidad">Cantidad</label>
+          <input id="tr-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="tr-observacion">Observación</label>
+          <textarea id="tr-observacion" placeholder="Opcional..."></textarea>
+          <div id="tr-msg"></div>
+          <div class="fila-botones">
+            <button class="btn btn-secundario" data-volver="product">Cancelar</button>
+            <button class="btn btn-primario" id="btn-confirmar-transferencia">Confirmar transferencia</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- AJUSTE ---------- -->
+      <div id="view-ajuste" class="view oculto">
+        <h2 class="titulo-vista">Ajuste de inventario</h2>
+        <div class="card">
+          <div class="producto-nombre" id="aj-nombre" style="font-size:15px;">—</div>
+          <label for="aj-ubicacion">Ubicación</label>
+          <select id="aj-ubicacion"></select>
+          <div style="text-align:right;font-size:12px;color:var(--text-muted);">Stock actual: <b id="aj-actual" class="cantidad">0</b></div>
+          <label for="aj-sentido">Tipo de ajuste</label>
+          <select id="aj-sentido">
+            <option value="Incremento">Incremento (+)</option>
+            <option value="Disminucion">Disminución (−)</option>
+          </select>
+          <label for="aj-cantidad">Cantidad</label>
+          <input id="aj-cantidad" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <label for="aj-motivo">Motivo</label>
+          <select id="aj-motivo">
+            <option value="Diferencia de inventario">Diferencia de inventario</option>
+            <option value="Merma">Merma</option>
+            <option value="Error de registro">Error de registro</option>
+            <option value="Material deteriorado">Material deteriorado</option>
+            <option value="Corrección administrativa">Corrección administrativa</option>
+          </select>
+          <label for="aj-observacion">Observación</label>
+          <textarea id="aj-observacion" placeholder="Detalle del ajuste..."></textarea>
+          <div id="aj-msg"></div>
+          <div class="fila-botones">
+            <button class="btn btn-secundario" data-volver="product">Cancelar</button>
+            <button class="btn btn-primario" id="btn-confirmar-ajuste">Confirmar ajuste</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- RESULTADO DE MOVIMIENTO ---------- -->
+      <div id="view-resultado" class="view oculto">
+        <h2 class="titulo-vista">Movimiento registrado</h2>
+        <div class="card">
+          <div class="msg-ok"><b>Listo</b><span id="res-detalle"></span></div>
+          <div style="font-size:12px;color:var(--text-muted);">Folio: <span class="id-mov" id="res-folio">—</span></div>
+          <div class="stock-barra" style="margin-top:14px;">
+            <div><span>A</span><b id="res-stock-A">0</b></div>
+            <div><span>B</span><b id="res-stock-B">0</b></div>
+            <div><span>C</span><b id="res-stock-C">0</b></div>
+            <div><span>D</span><b id="res-stock-D">0</b></div>
+            <div><span>E</span><b id="res-stock-E">0</b></div>
+          </div>
+        </div>
+        <div class="fila-botones">
+          <button class="btn" data-ir="home">Ir al inicio</button>
+          <button class="btn btn-primario" data-ir="scan">Escanear otro</button>
+        </div>
+      </div>
+
+      <!-- ---------- CONSULTA DE STOCK ---------- -->
+      <div id="view-stock" class="view oculto">
+        <h2 class="titulo-vista">Consultar stock</h2>
+        <div class="card">
+          <label for="st-buscar">Buscar por código</label>
+          <input id="st-buscar" type="text" placeholder="Ej. TEL-001">
+          <button class="btn btn-primario" id="btn-buscar-stock" style="margin-top:10px;">Buscar</button>
+        </div>
+        <div id="st-resultados"></div>
+      </div>
+
+      <!-- ---------- CONSULTA POR UBICACIÓN ---------- -->
+      <div id="view-ubicacion" class="view oculto">
+        <h2 class="titulo-vista">¿Qué hay en cada almacén?</h2>
+        <div class="subnav" id="ub-tabs"></div>
+        <div id="ub-resultados"></div>
+      </div>
+
+      <!-- ---------- HISTORIAL ---------- -->
+      <div id="view-historial" class="view oculto">
+        <h2 class="titulo-vista">Historial de movimientos</h2>
+        <div class="card">
+          <div class="filtros">
+            <div><label for="hi-desde">Desde</label><input id="hi-desde" type="date"></div>
+            <div><label for="hi-hasta">Hasta</label><input id="hi-hasta" type="date"></div>
+            <div><label for="hi-tipo">Tipo</label>
+              <select id="hi-tipo">
+                <option value="">Todos</option>
+                <option value="Entrada">Entrada</option>
+                <option value="Salida">Salida</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Ajuste">Ajuste</option>
+              </select>
+            </div>
+            <div><label for="hi-codigo">Código</label><input id="hi-codigo" type="text" placeholder="Ej. TEL-001"></div>
+            <div class="ancho"><label for="hi-usuario" id="hi-usuario-label">Usuario</label><input id="hi-usuario" type="text" placeholder="usuario"></div>
+          </div>
+          <button class="btn btn-primario" id="btn-filtrar-historial" style="margin-top:12px;">Filtrar</button>
+        </div>
+        <div id="hi-resultados"></div>
+      </div>
+
+      <!-- ---------- RESUMEN ---------- -->
+      <div id="view-resumen" class="view oculto">
+        <h2 class="titulo-vista">Resumen de inventario</h2>
+        <div id="re-contenido"></div>
+      </div>
+
+      <!-- ---------- ADMIN: MENÚ ---------- -->
+      <div id="view-admin" class="view oculto">
+        <h2 class="titulo-vista">Configuración</h2>
+        <div class="grid-botones-home">
+          <button class="btn ancho" data-ir="productos">🏷️ Productos y QR</button>
+          <button class="btn" data-ir="ubicaciones">🏬 Ubicaciones</button>
+          <button class="btn" data-ir="usuarios">👥 Usuarios</button>
+          <button class="btn ancho" data-ir="auditoria">🛠️ Auditoría / mantenimiento</button>
+        </div>
+      </div>
+
+      <!-- ---------- ADMIN: PRODUCTOS / QR ---------- -->
+      <div id="view-productos" class="view oculto">
+        <h2 class="titulo-vista">Productos y QR</h2>
+        <div class="card">
+          <b>+ Nuevo producto / lote</b>
+          <label for="pr-codigo">Código (SKU)</label>
+          <input id="pr-codigo" type="text" placeholder="TEL-001">
+          <label for="pr-descripcion">Descripción</label>
+          <input id="pr-descripcion" type="text" placeholder="Franela Acero">
+          <label for="pr-color">Color</label>
+          <input id="pr-color" type="text" placeholder="Acero">
+          <label for="pr-unidad">Unidad</label>
+          <input id="pr-unidad" type="text" placeholder="KG">
+          <label for="pr-lote">Lote</label>
+          <input id="pr-lote" type="text" placeholder="L001">
+          <label for="pr-proveedor">Proveedor</label>
+          <input id="pr-proveedor" type="text" placeholder="Proveedor ABC">
+          <div id="pr-msg"></div>
+          <button class="btn btn-primario" id="btn-crear-producto" style="margin-top:12px;">Guardar y generar QR</button>
+        </div>
+
+        <div class="card oculto" id="pr-qr-card">
+          <div id="qrcode-canvas-wrap"></div>
+          <div class="etiqueta-qr">
+            <div class="cod" id="pr-qr-codigo">TEL-001</div>
+            <div class="desc" id="pr-qr-descripcion">Franela Acero</div>
+            <div class="lote" id="pr-qr-lote">Lote L001</div>
+          </div>
+          <div class="fila-botones">
+            <button class="btn" id="btn-descargar-qr">Descargar PNG</button>
+            <button class="btn" id="btn-imprimir-qr">Imprimir</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <label for="pr-buscar">Buscar producto</label>
+          <input id="pr-buscar" type="text" placeholder="Código, descripción, lote...">
+          <p style="color:var(--text-muted);font-size:12px;margin:10px 0 0;">Marca las casillas de los productos que quieres imprimir y usa el botón de abajo — arma automáticamente una planilla A4 con 12 etiquetas por hoja (3 columnas × 4 filas).</p>
+          <div class="fila-botones">
+            <button class="btn" id="btn-seleccionar-todos-productos">Seleccionar todos</button>
+            <button class="btn btn-primario" id="btn-imprimir-planilla">🖨️ Imprimir planilla</button>
+          </div>
+        </div>
+        <div id="pr-lista"></div>
+      </div>
+
+      <!-- ---------- ADMIN: UBICACIONES ---------- -->
+      <div id="view-ubicaciones-admin" class="view oculto">
+        <h2 class="titulo-vista">Ubicaciones</h2>
+        <div class="card">
+          <b>+ Nueva ubicación</b>
+          <label for="ua-codigo">Código</label>
+          <input id="ua-codigo" type="text" placeholder="F" style="text-transform:uppercase;">
+          <label for="ua-nombre">Nombre</label>
+          <input id="ua-nombre" type="text" placeholder="Almacén F">
+          <div id="ua-msg"></div>
+          <button class="btn btn-primario" id="btn-crear-ubicacion" style="margin-top:10px;">Crear ubicación</button>
+        </div>
+        <div id="ua-lista"></div>
+      </div>
+
+      <!-- ---------- ADMIN: USUARIOS ---------- -->
+      <div id="view-usuarios" class="view oculto">
+        <h2 class="titulo-vista">Usuarios</h2>
+        <div class="card">
+          <b>+ Nuevo usuario</b>
+          <label for="us-usuario">Usuario</label>
+          <input id="us-usuario" type="text" placeholder="jperez">
+          <label for="us-nombre">Nombre</label>
+          <input id="us-nombre" type="text" placeholder="Juan Pérez">
+          <label for="us-rol">Rol</label>
+          <select id="us-rol">
+            <option value="Operativo">Operativo</option>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Admin">Admin / Mantenimiento</option>
+          </select>
+          <label for="us-pin">PIN (4 a 6 dígitos)</label>
+          <input id="us-pin" type="text" inputmode="numeric" placeholder="1234">
+          <div id="us-msg"></div>
+          <button class="btn btn-primario" id="btn-crear-usuario" style="margin-top:10px;">Crear usuario</button>
+        </div>
+        <div id="us-lista"></div>
+      </div>
+
+      <!-- ---------- ADMIN: AUDITORÍA ---------- -->
+      <div id="view-auditoria" class="view oculto">
+        <h2 class="titulo-vista">Auditoría / mantenimiento</h2>
+        <div class="card">
+          <p style="color:var(--text-muted);font-size:13.5px;margin-top:0;">
+            El stock siempre se calcula a partir del historial de movimientos.
+            Si alguna vez notas un número que no cuadra, este botón vuelve a
+            calcular todo el stock desde cero, fila por fila, sin borrar
+            ningún movimiento.
+          </p>
+          <div id="au-msg"></div>
+          <button class="btn btn-primario" id="btn-recalcular-stock">Recalcular stock completo</button>
+        </div>
+      </div>
+
+    </main>
+
+    <div class="tabbar">
+      <button data-ir="home" class="tab-btn"><span class="ico">🏠</span>Inicio</button>
+      <button data-ir="scan" class="tab-btn"><span class="ico">📷</span>Escanear</button>
+      <button data-ir="stock" class="tab-btn"><span class="ico">📦</span>Stock</button>
+      <button data-ir="historial" class="tab-btn"><span class="ico">🕘</span>Historial</button>
+      <button data-ir="resumen" class="tab-btn"><span class="ico">📊</span>Resumen</button>
+      <button data-ir="admin" class="tab-btn oculto" data-rol-admin><span class="ico">⚙️</span>Admin</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
