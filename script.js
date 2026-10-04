@@ -27,6 +27,10 @@
       token = args[0];
       payload = args[1] !== undefined ? args[1] : {};
     }
+    function fallo(detalle) {
+      var msg = 'NO SE PUDO CONECTAR — ' + detalle;
+      if (onErr) onErr(msg); else window.alert(msg);
+    }
     fetch(EXEC_URL, {
       method: 'POST',
       // text/plain evita que el navegador mande una peticion de "preflight" (OPTIONS)
@@ -34,17 +38,21 @@
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ accion: fnName, token: token, payload: payload })
     }).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function (res) {
-      if (res.ok) { if (onOk) onOk(res.data); }
-      else {
-        var msg = res.error || 'NO SE PUDO CONECTAR — Verifica tu conexión e inténtalo nuevamente.';
-        if (onErr) onErr(msg); else window.alert(msg);
-      }
-    }).catch(function () {
-      var msg = 'NO SE PUDO CONECTAR — Verifica tu conexión a Internet e inténtalo nuevamente.';
-      if (onErr) onErr(msg); else window.alert(msg);
+      return r.text().then(function (txt) {
+        var res = null;
+        try { res = JSON.parse(txt); } catch (e) {}
+        if (!res) {
+          var resumen = txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 220);
+          return fallo('[' + fnName + '] El servidor respondio HTTP ' + r.status + ' con algo que no es JSON: ' + resumen);
+        }
+        if (res.ok) { if (onOk) onOk(res.data); }
+        else {
+          var msg = res.error || 'Error desconocido del servidor.';
+          if (onErr) onErr(msg); else window.alert(msg);
+        }
+      });
+    }).catch(function (e) {
+      fallo('[' + fnName + '] ' + (e && e.message ? e.message : 'sin conexion') + ' — Verifica tu conexion a Internet e intentalo nuevamente.');
     });
   }
 
