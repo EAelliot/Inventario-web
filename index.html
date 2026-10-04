@@ -316,6 +316,8 @@
           <label for="pr-buscar">Buscar producto</label>
           <input id="pr-buscar" type="text" placeholder="Código, descripción, lote...">
           <p style="color:var(--text-muted);font-size:12px;margin:10px 0 0;">Marca las casillas de los productos que quieres imprimir y usa el botón de abajo — arma automáticamente una planilla A4 con 12 etiquetas por hoja (3 columnas × 4 filas).</p>
+          <label for="pr-copias">Copias de cada etiqueta (12 = una hoja completa del mismo producto)</label>
+          <input id="pr-copias" type="number" min="1" max="120" value="12" inputmode="numeric">
           <div class="fila-botones">
             <button class="btn" id="btn-seleccionar-todos-productos">Seleccionar todos</button>
             <button class="btn btn-primario" id="btn-imprimir-planilla">🖨️ Imprimir planilla</button>

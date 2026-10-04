@@ -564,16 +564,19 @@
   }
 
   /** Arma una planilla A4 de etiquetas QR, 3 columnas x 4 filas (12 por hoja), y abre el diálogo de impresión. */
-  function imprimirPlanillaQr(productos) {
+  function imprimirPlanillaQr(productos, copias) {
     if (!productos.length) { window.alert('Marca al menos un producto de la lista para imprimir su planilla de QR.'); return; }
-    var celdas = productos.map(function (p) {
+    copias = Math.max(1, Math.min(120, parseInt(copias, 10) || 1));
+    var celdas = [];
+    productos.forEach(function (p) {
       var dataUrl = generarQrDataUrl_(p.idQr, 200);
-      return '<div class="etiqueta">' +
+      var celda = '<div class="etiqueta">' +
         '<img src="' + dataUrl + '">' +
         '<div class="cod">' + escapeHtml(p.codigo) + '</div>' +
         '<div class="desc">' + escapeHtml(p.descripcion) + '</div>' +
         '<div class="lote">Lote ' + escapeHtml(p.lote || '—') + ' · ' + p.idQr + '</div>' +
         '</div>';
+      for (var c = 0; c < copias; c++) celdas.push(celda);
     });
     var hojas = '';
     for (var i = 0; i < celdas.length; i += 12) {
@@ -587,7 +590,7 @@
       '<html><head><title>Planilla de QR</title><style>' +
       '@page { size: A4; margin: 10mm; }' +
       '*{box-sizing:border-box;} body{font-family:sans-serif;margin:0;}' +
-      '.hoja{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:4mm;width:100%;height:277mm;page-break-after:always;}' +
+      '.hoja{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:4mm;width:100%;height:275mm;page-break-after:always;}' +
       '.hoja:last-child{page-break-after:auto;}' +
       '.etiqueta{border:1px dashed #999;border-radius:6px;padding:4mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}' +
       '.etiqueta.vacia{border:none;}' +
@@ -789,7 +792,7 @@
   });
 
   document.getElementById('btn-imprimir-planilla').addEventListener('click', function () {
-    imprimirPlanillaQr(Object.keys(productosSeleccionados).map(function (k) { return productosSeleccionados[k]; }));
+    imprimirPlanillaQr(Object.keys(productosSeleccionados).map(function (k) { return productosSeleccionados[k]; }), document.getElementById('pr-copias').value);
   });
 
   document.getElementById('btn-descargar-qr').addEventListener('click', function () {
